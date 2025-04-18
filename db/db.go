@@ -19,9 +19,9 @@ func ConnectDB(connStr string) {
 	var err error
 	Conn, err = pgx.Connect(context.Background(), connStr)
 	if err != nil {
-		log.Fatal("❌ Could not connect to DB:", err)
+		log.Fatal("Could not connect to DB:", err)
 	}
-	fmt.Println("✅ Connected to PostgreSQL (Neon)")
+	fmt.Println("Connected to PostgreSQL (Neon)")
 }
 
 func CloseDB() {
