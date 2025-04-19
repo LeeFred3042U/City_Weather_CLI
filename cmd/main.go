@@ -1,21 +1,20 @@
 package main
 
 import (
+	"City_Weather_CLI/api"
 	"City_Weather_CLI/config"
-	"City_Weather_CLI/db"
 	"fmt"
 )
 
 func main() {
-	// Loading from .env file
 	config.LoadEnv()
 
-	//Getting DB connection string
-	connStr := config.GetDBURL()
+	weather, err := api.GetWeather("Lucknow")
+	if err != nil {
+		fmt.Println("Error:", err)
+		return
+	}
 
-	//connecting DB
-	db.ConnectDB(connStr)
-	defer db.CloseDB()
-
-	fmt.Println("App started successfully.")
+	fmt.Printf("🌆 City: %s\n🌡️ Temp: %.2f°C\n🌤️ Description: %s\n",
+		weather.City, weather.Temperature, weather.Description)
 }
