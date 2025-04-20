@@ -12,40 +12,50 @@ import (
 )
 
 func main() {
-	// Load environment variables
+	//Loading variables
 	err := godotenv.Load(".env")
 	if err != nil {
 		log.Fatal("Error loading .env file")
 	}
 
-	// Connect to database
+	//Connect to db
 	conn, err := db.Connect()
 	if err != nil {
 		log.Fatal("Failed to connect to database:", err)
 	}
 	defer conn.Close(context.Background())
 
-	// Create table if not exists
+	//If table does'nt exist create it
 	err = db.CreateTableIfNotExists(conn)
 	if err != nil {
 		log.Fatal("Error creating table:", err)
 	}
 
-	// Fetch weather data
+	//Fetching Data
 	city := "Lucknow" // Example city
 	weather, err := api.GetWeather(city)
 	if err != nil {
 		log.Fatal("Error fetching weather data:", err)
 	}
 
-	// Save weather data to the database
+
+	//Display
+	ui.DisplayWeather(weather)
+
+	fmt.Println("Weather data saved and displayed successfully.")
+
+
+	//Saving data in db
 	err = db.SaveWeatherData(conn, weather)
 	if err != nil {
 		log.Fatal("Error saving weather data:", err)
 	}
 
-	// Display weather data
-	ui.DisplayWeather(weather)
+	//15 row limit
+	err = db.EnforceRowLimit(conn)
+	if err != nil {
+		log.Fatal("Error enforcing row limit:", err)
+	}
 
-	fmt.Println("Weather data saved and displayed successfully.")
 }
+

@@ -1,6 +1,7 @@
 package models
 
-// Weather represents the weather data structure
+
+//Defines type of output
 type Weather struct {
 	City        string  `json:"city"`
 	Temperature int `json:"temperature"`
