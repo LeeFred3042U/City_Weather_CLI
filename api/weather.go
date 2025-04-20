@@ -1,57 +1,65 @@
 package api
 
 import (
+	"City_Weather_CLI/models"
 	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
-	"time"
-
-	"City_Weather_CLI/models"
 )
 
 type apiResponse struct {
 	Name string `json:"name"`
 	Main struct {
-		Temp float64 `json:"temp"`
+		Temp     float64 `json:"temp"`
+		Humidity int     `json:"humidity"`
 	} `json:"main"`
+	Wind struct {
+		Speed float64 `json:"speed"`
+	} `json:"wind"`
 	Weather []struct {
 		Description string `json:"description"`
 	} `json:"weather"`
 }
 
+// GetWeather fetches weather data from OpenWeather API
 func GetWeather(city string) (*models.Weather, error) {
-	apiKey := os.Getenv("WEATHER_API_KEY")
-	if apiKey == "" {
-		return nil, fmt.Errorf("missing API key in environment")
-	}
+	apiKey := os.Getenv("OPENWEATHER_API_KEY")
+	url := fmt.Sprintf("https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s", city, apiKey)
 
-	url := fmt.Sprintf(
-		"https://api.openweathermap.org/data/2.5/weather?q=%s&appid=%s&units=metric",
-		city, apiKey,
-	)
 
-	client := http.Client{Timeout: 10 * time.Second}
-	resp, err := client.Get(url)
+	resp, err := http.Get(url)
 	if err != nil {
-		return nil, fmt.Errorf("HTTP request failed: %v", err)
+		return nil, err
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("API returned status: %s", resp.Status)
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("failed to get data: %s", resp.Status)
 	}
 
 	var result apiResponse
-	err = json.NewDecoder(resp.Body).Decode(&result)
+	body, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("decoding JSON failed: %v", err)
+		return nil, err
 	}
+
+	err = json.Unmarshal(body, &result)
+	if err != nil {
+		return nil, err
+	}
+
+
+
+	TempInCelsius := int(result.Main.Temp - 273.15)
 
 	weather := &models.Weather{
 		City:        result.Name,
-		Temperature: result.Main.Temp,
+		Temperature: TempInCelsius,
 		Description: result.Weather[0].Description,
+		Humidity:    result.Main.Humidity,
+		WindSpeed:   result.Wind.Speed,
 	}
 
 	return weather, nil
